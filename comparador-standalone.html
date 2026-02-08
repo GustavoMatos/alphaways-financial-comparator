@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALPHAWAYS - Comparador Financeiro de Consórcio</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --petrol-deep: #051F25;
+            --petrol-surface: #0B2D36;
+            --petrol-light: #16424D;
+            --petrol-border: #2C5E6B;
+            --gold-prime: #D4B483;
+            --gold-hover: #EACF9F;
+            --gold-muted: #8C7350;
+            --silver: #B0BEC5;
+            --tech-blue: #2563EB;
+            --emerald: #10B981;
+            --error: #E11D48;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--petrol-deep);
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .dashboard h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            letter-spacing: -0.02em;
+        }
+
+        .dashboard .subtitle {
+            color: var(--gold-prime);
+            font-family: monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-top: 0.5rem;
+        }
+
+        .dashboard .description {
+            color: var(--silver);
+            max-width: 600px;
+            margin: 2rem auto;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: var(--gold-prime);
+            color: var(--petrol-deep);
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--gold-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--gold-prime);
+            color: var(--gold-prime);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+            max-width: 800px;
+        }
+
+        .feature-card {
+            background: var(--petrol-surface);
+            border: 1px solid var(--petrol-border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .feature-card .number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .feature-card p {
+            color: #ccc;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Simulation View */
+        .simulation {
+            display: none;
+            height: 100vh;
+        }
+
+        .simulation.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 400px;
+            background: var(--petrol-surface);
+            border-right: 1px solid var(--petrol-light);
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .sidebar h2 {
+            color: var(--gold-prime);
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar .subtitle {
+            color: var(--silver);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--petrol-light);
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+        }
+
+        .section-title.blue { color: var(--tech-blue); }
+        .section-title.gold { color: var(--gold-prime); }
+        .section-title.gray { color: var(--petrol-border); }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--silver);
+            margin-bottom: 0.25rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--petrol-deep);
+            border: 1px solid var(--petrol-border);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--gold-prime);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Switch Toggle */
+        .switch-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--petrol-deep);
+            border: 1px solid var(--petrol-border);
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+        }
+
+        .switch-group label {
+            font-size: 0.75rem;
+            color: var(--silver);
+            flex: 1;
+        }
+
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--petrol-border);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--gold-prime);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .switch-options {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.65rem;
+            color: var(--silver);
+        }
+
+        .switch-options span {
+            opacity: 0.5;
+        }
+
+        .switch-options span.active {
+            opacity: 1;
+            color: var(--gold-prime);
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--petrol-border);
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .back-btn:hover {
+            color: var(--gold-prime);
+        }
+
+        .results-header {
+            border-bottom: 1px solid var(--petrol-light);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .results-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .results-header p {
+            color: var(--silver);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--petrol-surface);
+            border: 1px solid var(--petrol-light);
+            padding: 1.25rem;
+            border-radius: 8px;
+        }
+
+        .kpi-card .title {
+            font-size: 0.7rem;
+            color: var(--silver);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .kpi-card .value.gold { color: var(--gold-prime); }
+        .kpi-card .value.blue { color: var(--tech-blue); }
+        .kpi-card .value.green { color: var(--emerald); }
+
+        .kpi-card .subtext {
+            font-size: 0.7rem;
+            color: var(--silver);
+            margin-top: 0.25rem;
+        }
+
+        .chart-container {
+            background: var(--petrol-surface);
+            border: 1px solid var(--petrol-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container h3 {
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .chart-wrapper {
+            height: 350px;
+            position: relative;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .simulation.active {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+            }
+            .main-content {
+                height: 60vh;
+            }
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Dashboard View -->
+    <div id="dashboard" class="dashboard">
+        <div>
+            <h1>ALPHAWAYS</h1>
+            <p class="subtitle">Financial Intelligence</p>
+        </div>
+
+        <p class="description">
+            Comparador avançado de aquisição de ativos. Analise o impacto no seu patrimônio líquido
+            entre compra à vista, financiamento e consórcio com projeções de longo prazo.
+        </p>
+
+        <button class="btn" onclick="showSimulation()">+ Nova Simulação</button>
+
+        <div class="features">
+            <div class="feature-card">
+                <span class="number" style="color: var(--tech-blue)">01.</span>
+                <p>Cálculo preciso de amortização SAC e PRICE.</p>
+            </div>
+            <div class="feature-card">
+                <span class="number" style="color: var(--gold-prime)">02.</span>
+                <p>Cálculo de VPL e Patrimônio Líquido Real.</p>
+            </div>
+            <div class="feature-card">
+                <span class="number" style="color: var(--emerald)">03.</span>
+                <p>Visualização de dados premium e comparativa.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulation View -->
+    <div id="simulation" class="simulation">
+        <!-- Sidebar Form -->
+        <div class="sidebar">
+            <h2>Configuração</h2>
+            <p class="subtitle">Defina os parâmetros da aquisição.</p>
+
+            <!-- General -->
+            <h3 class="section-title gray">Premissas Gerais</h3>
+
+            <div class="form-group">
+                <label>Tipo de Bem</label>
+                <select id="assetType" onchange="calculate()">
+                    <option value="Real Estate">Imóvel</option>
+                    <option value="Vehicle">Veículo</option>
+                    <option value="Machinery">Maquinário / Pesados</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Valor de Mercado (R$)</label>
+                <input type="number" id="assetValue" value="500000" onchange="calculate()">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Valorização Anual (%)</label>
+                    <input type="number" id="appreciationRate" value="5" step="0.1" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Taxa Selic/CDI (% a.a.)</label>
+                    <select id="selicRate" onchange="updateOpportunityCost()">
+                        <option value="10.5">10,5% - Cenário otimista</option>
+                        <option value="12" selected>12% - Cenário base</option>
+                        <option value="13.5">13,5% - Cenário atual</option>
+                        <option value="15">15% - Cenário pessimista</option>
+                        <option value="custom">Personalizado...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" id="customSelicGroup" style="display: none;">
+                <label>Taxa Selic Personalizada (% a.a.)</label>
+                <input type="number" id="customSelicRate" value="12" step="0.5" onchange="updateOpportunityCost()">
+            </div>
+
+            <div style="font-size: 0.7rem; color: var(--silver); margin-top: -0.5rem; margin-bottom: 1rem;">
+                Custo de oportunidade: <span id="opportunityCostDisplay" style="color: var(--gold-prime);">0.95% ao mês</span>
+            </div>
+
+            <!-- Financing -->
+            <h3 class="section-title blue">Financiamento</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Entrada (R$)</label>
+                    <input type="number" id="downPayment" value="100000" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Prazo (Meses)</label>
+                    <input type="number" id="termMonths" value="360" onchange="calculate()">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Taxa de Juros (% a.a.)</label>
+                    <input type="number" id="financingRate" value="9.5" step="0.1" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Amortização</label>
+                    <select id="amortization" onchange="calculate()">
+                        <option value="SAC">SAC (Decrescente)</option>
+                        <option value="PRICE">PRICE (Fixa)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Consortium -->
+            <h3 class="section-title gold">Consórcio</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Valor da Carta (R$)</label>
+                    <input type="number" id="consortiumLetter" value="500000" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Prazo Total (Meses)</label>
+                    <input type="number" id="consortiumTerm" value="200" onchange="calculate()">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Taxa Adm. Total (%)</label>
+                    <input type="number" id="consortiumFee" value="16" step="0.5" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Fundo de Reserva (%)</label>
+                    <input type="number" id="consortiumReserveFund" value="2" step="0.5" onchange="calculate()">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Seguro (% a.a.)</label>
+                    <input type="number" id="consortiumInsurance" value="0" step="0.1" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Correção Anual (%)</label>
+                    <input type="number" id="consortiumCorrection" value="5" step="0.5" onchange="calculate()">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Mês da Contemplação</label>
+                    <input type="number" id="contemplationMonth" value="24" onchange="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Lance (R$)</label>
+                    <input type="number" id="consortiumBid" value="250000" onchange="calculate()">
+                </div>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <small style="color: var(--gold-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Regras Contratuais</small>
+            </div>
+
+            <div class="switch-group">
+                <label>Modo Pós-Contemplação</label>
+                <div class="switch-options">
+                    <span id="labelReduzPrazo" class="active">Reduz Prazo</span>
+                    <label class="switch">
+                        <input type="checkbox" id="consortiumMode" onchange="updateSwitchLabels(); calculate()">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="labelReduzParcela">Reduz Parcela</span>
+                </div>
+            </div>
+
+            <div style="font-size: 0.65rem; color: var(--silver); margin-top: -0.5rem; padding: 0.5rem; background: var(--petrol-deep); border-radius: 4px;">
+                <strong>Reduz Prazo:</strong> Parcela constante, prazo variável<br>
+                <strong>Reduz Parcela:</strong> Prazo constante, parcela variável
+            </div>
+
+            <!-- Reserva Investida -->
+            <h3 class="section-title" style="color: var(--emerald);">Reserva Investida</h3>
+
+            <div class="form-group">
+                <label>Capital Inicial da Reserva (R$)</label>
+                <input type="number" id="reserveCapital" value="500000" onchange="calculate()">
+                <small style="color: var(--silver); font-size: 0.7rem;">Valor que seria usado para comprar à vista</small>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <button class="btn btn-outline" style="width: 100%;" onclick="window.print()">
+                    Gerar Relatório PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="main-content">
+            <button class="back-btn" onclick="showDashboard()">&larr; Voltar ao Início</button>
+
+            <div class="results-header">
+                <h2>Análise Patrimonial</h2>
+                <p id="analysisSubtitle">Comparativo de Eficiência Financeira em 30 anos</p>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="title">Consórcio (Saldo Final)</div>
+                    <div class="value gold" id="kpiConsortium">R$ 0</div>
+                    <div class="subtext" id="kpiConsortiumDetail">PV restante após parcelas</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="title">Financiamento (Saldo Final)</div>
+                    <div class="value blue" id="kpiFinancing">R$ 0</div>
+                    <div class="subtext" id="kpiFinancingPaid">PV restante após parcelas</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="title">Compra à Vista (Saldo Final)</div>
+                    <div class="value green" id="kpiInvestment">R$ 0</div>
+                    <div class="subtext" id="kpiCashDetail">-500k + Aportes CDI</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>Evolução do Saldo em Dinheiro (R$) - Todos têm imóvel</h3>
+                <div class="chart-wrapper">
+                    <canvas id="netWorthChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>Fluxo de Caixa Mensal (R$)</h3>
+                <div class="chart-wrapper" style="height: 250px;">
+                    <canvas id="cashFlowChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let netWorthChart = null;
+        let cashFlowChart = null;
+
+        function showSimulation() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('simulation').classList.add('active');
+            updateOpportunityCost(); // Inicializa o custo de oportunidade
+            updateSwitchLabels(); // Inicializa labels dos switches
+        }
+
+        function updateSwitchLabels() {
+            // Switch de modo do consórcio
+            const modeSwitch = document.getElementById('consortiumMode').checked;
+            document.getElementById('labelReduzPrazo').className = modeSwitch ? '' : 'active';
+            document.getElementById('labelReduzParcela').className = modeSwitch ? 'active' : '';
+        }
+
+        function showDashboard() {
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('simulation').classList.remove('active');
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        // Converte taxa anual para mensal equivalente
+        function annualToMonthly(annualRate) {
+            return (Math.pow(1 + annualRate / 100, 1/12) - 1) * 100;
+        }
+
+        // Obtém a taxa Selic selecionada
+        function getSelicRate() {
+            const select = document.getElementById('selicRate');
+            if (select.value === 'custom') {
+                return parseFloat(document.getElementById('customSelicRate').value) || 12;
+            }
+            return parseFloat(select.value) || 12;
+        }
+
+        // Atualiza o custo de oportunidade quando muda a Selic
+        function updateOpportunityCost() {
+            const select = document.getElementById('selicRate');
+            const customGroup = document.getElementById('customSelicGroup');
+
+            // Mostra/esconde campo personalizado
+            if (select.value === 'custom') {
+                customGroup.style.display = 'block';
+            } else {
+                customGroup.style.display = 'none';
+            }
+
+            // Calcula e exibe o custo mensal
+            const selicAnnual = getSelicRate();
+            const monthlyRate = annualToMonthly(selicAnnual);
+            document.getElementById('opportunityCostDisplay').textContent =
+                monthlyRate.toFixed(2) + '% ao mês';
+
+            // Recalcula simulação
+            calculate();
+        }
+
+        function getParams() {
+            const selicAnnual = getSelicRate();
+            const monthlyOpportunityCost = annualToMonthly(selicAnnual);
+
+            return {
+                assetValue: parseFloat(document.getElementById('assetValue').value) || 500000,
+                appreciationRate: parseFloat(document.getElementById('appreciationRate').value) || 5,
+                opportunityCost: monthlyOpportunityCost, // Calculado a partir da Selic
+                cdiAnnual: selicAnnual, // CDI anual para cálculo de IR
+                downPayment: parseFloat(document.getElementById('downPayment').value) || 100000,
+                termMonths: parseInt(document.getElementById('termMonths').value) || 360,
+                financingRate: parseFloat(document.getElementById('financingRate').value) || 9.5,
+                amortization: document.getElementById('amortization').value,
+                // Consórcio
+                consortiumLetter: parseFloat(document.getElementById('consortiumLetter').value) || 500000,
+                consortiumTerm: parseInt(document.getElementById('consortiumTerm').value) || 200,
+                consortiumFee: parseFloat(document.getElementById('consortiumFee').value) || 16,
+                consortiumReserveFund: parseFloat(document.getElementById('consortiumReserveFund').value) || 2,
+                consortiumInsurance: parseFloat(document.getElementById('consortiumInsurance').value) || 0,
+                consortiumCorrection: parseFloat(document.getElementById('consortiumCorrection').value) || 5,
+                contemplationMonth: parseInt(document.getElementById('contemplationMonth').value) || 24,
+                consortiumBid: parseFloat(document.getElementById('consortiumBid').value) || 0,
+                // Regras contratuais do consórcio
+                // mode: "reduz_prazo" (parcela constante) ou "reduz_parcela" (prazo constante)
+                consortiumMode: document.getElementById('consortiumMode').checked ? 'reduz_parcela' : 'reduz_prazo',
+                // Reserva Investida
+                reserveCapital: parseFloat(document.getElementById('reserveCapital').value) || 500000,
+            };
+        }
+
+        // Calcula IR regressivo sobre rendimento de renda fixa
+        function calculateIR(daysHeld) {
+            if (daysHeld <= 180) return 0.225;      // 22.5%
+            if (daysHeld <= 360) return 0.20;       // 20%
+            if (daysHeld <= 720) return 0.175;      // 17.5%
+            return 0.15;                             // 15%
+        }
+
+        function calculateSimulation(params) {
+            const flows = [];
+
+            // Common Constants
+            const monthlyAppreciation = Math.pow(1 + params.appreciationRate / 100, 1 / 12) - 1;
+            const monthlyOpportunityCost = params.opportunityCost / 100;
+
+            // ============================================
+            // FINANCIAMENTO Setup (Nova Lógica)
+            // ============================================
+            // - Tem R$ 500k disponível (valor do imóvel)
+            // - Dá entrada (sai do PV)
+            // - Financia o restante
+            // - PV rende CDI, parcelas saem do PV
+            // - Correção anual: saldo devedor corrige pela valorização do bem
+            // - O imóvel não entra na conta (todos terão imóvel no final)
+
+            const financingRateMonthly = Math.pow(1 + params.financingRate / 100, 1 / 12) - 1;
+            const financingPrincipal = params.assetValue - params.downPayment;
+
+            // PV = valor total do imóvel (o dinheiro que ele "tem")
+            // Paga entrada de cara
+            let finPV = params.assetValue - params.downPayment; // Sobra após entrada
+            let finDebtBalance = financingPrincipal; // Saldo devedor do financiamento
+            let finTotalPaid = params.downPayment; // Começou pagando a entrada
+            let finRemainingMonths = params.termMonths; // Meses restantes
+
+            // Para PRICE: calcular parcela inicial (será recalculada após correção)
+            let finPricePayment = financingPrincipal * (financingRateMonthly * Math.pow(1 + financingRateMonthly, params.termMonths)) / (Math.pow(1 + financingRateMonthly, params.termMonths) - 1);
+
+            // ============================================
+            // CONSÓRCIO Setup - MODELO CONTRATUAL REAL
+            // ============================================
+            // Este modelo reflete um consórcio CONTRATUAL, não uma simulação econômica.
+            // Segue rigorosamente as regras de um contrato de consórcio brasileiro.
+            //
+            // REGRAS IMPLEMENTADAS:
+            // 1. Pré-contemplação: parcela fixa, saldo devedor NÃO diminui
+            // 2. Pós-contemplação: amortização FIXA calculada uma vez
+            // 3. Taxas calculadas separadamente (adm, fundo reserva, seguro)
+            // 4. Dois modos: "reduz_prazo" ou "reduz_parcela"
+            // 5. Correção anual no mês de aniversário (mês 13, 25, 37...)
+            // ============================================
+
+            const consLetter = params.consortiumLetter;
+            const consTerm = params.consortiumTerm;
+            const consAdminFeeRate = params.consortiumFee / 100;      // Taxa adm total sobre carta
+            const consReserveFundRate = params.consortiumReserveFund / 100; // Fundo reserva sobre carta
+            const consInsuranceRate = params.consortiumInsurance / 100;     // Seguro sobre saldo devedor
+            const consCorrectionRate = params.consortiumCorrection / 100;
+            const contemplationMonth = params.contemplationMonth;
+            const consortiumMode = params.consortiumMode; // "reduz_prazo" ou "reduz_parcela"
+
+            // Estado do consórcio
+            let consLetterValue = consLetter;           // Carta de crédito (corrige anualmente)
+            let consDebtBalance = consLetter;           // Saldo devedor inicial = carta
+            let consRemainingMonths = consTerm;         // Meses restantes do grupo
+            let consContemplated = false;
+            let consTotalPaid = 0;
+
+            // Parcela pré-contemplação (fixa até correção anual)
+            // Fórmula: (Carta × (1 + taxas)) / prazo_total
+            // A parcela INCLUI amortização que reduz o saldo devedor
+            let consPreContempPayment = (consLetter * (1 + consAdminFeeRate + consReserveFundRate)) / consTerm;
+
+            // Amortização pré-contemplação = Carta / Prazo (parte da parcela que reduz saldo)
+            let consPreContempAmortization = consLetter / consTerm;
+
+            // Variáveis pós-contemplação (serão definidas na contemplação)
+            let consFixedAmortization = 0;              // Amortização FIXA (não muda após definida)
+            let consTargetPayment = 0;                  // Parcela alvo (para modo reduz_prazo)
+            let consOriginalRemainingMonths = 0;        // Meses restantes originais (para modo reduz_parcela)
+
+            // Reserva investida (CDI)
+            let reserveBalance = params.reserveCapital; // Capital inicial
+            let reserveGrossYield = 0;                  // Rendimento bruto acumulado (para IR)
+            const cdiMonthly = Math.pow(1 + params.cdiAnnual / 100, 1/12) - 1;
+
+            // ============================================
+            // COMPRA À VISTA Setup (Linha Verde)
+            // ============================================
+            // Lógica: Desembolsou o valor de mercado do bem para comprar à vista
+            // Aporta mensalmente: Valor de Mercado / Prazo do Consórcio
+            // Faz aportes durante todo o prazo do consórcio (ex: 200 meses)
+            // Após o prazo: patrimônio líquido rende CDI diretamente
+
+            const cashCost = params.assetValue; // Custo = valor de mercado do bem
+            const cashFixedPayment = params.assetValue / consTerm; // Aporte = Valor / Prazo
+            const cashPaymentMonths = consTerm; // Quantidade de aportes = prazo do consórcio
+            let cashInvestments = 0; // Aportes que rendem CDI
+            let cashNetWorthAccum = -cashCost; // Patrimônio líquido acumulado (começa negativo)
+            let totalPaidCash = params.assetValue;
+
+            const maxMonths = Math.max(params.termMonths, params.consortiumTerm);
+
+            for (let m = 1; m <= maxMonths; m++) {
+
+                // ============================================
+                // CORREÇÃO ANUAL DO CONSÓRCIO (mês de aniversário)
+                // Aplica-se no mês 13, 25, 37... (início de cada ano do grupo)
+                // Corrige: carta, saldo devedor, amortização e parcela
+                // ============================================
+                if (m > 1 && m % 12 === 1) {
+                    const yearlyCorrection = 1 + consCorrectionRate;
+
+                    // 1. Corrige carta de crédito
+                    consLetterValue = consLetterValue * yearlyCorrection;
+
+                    // 2. Corrige saldo devedor (se ainda houver)
+                    if (consDebtBalance > 0) {
+                        consDebtBalance = consDebtBalance * yearlyCorrection;
+                    }
+
+                    // 3. Recalcula parcelas/amortização conforme fase
+                    if (!consContemplated) {
+                        // PRÉ-CONTEMPLAÇÃO: recalcula parcela fixa e amortização
+                        consPreContempPayment = (consLetterValue * (1 + consAdminFeeRate + consReserveFundRate)) / consTerm;
+                        consPreContempAmortization = consLetterValue / consTerm;
+                    } else {
+                        // PÓS-CONTEMPLAÇÃO: corrige amortização fixa
+                        consFixedAmortization = consFixedAmortization * yearlyCorrection;
+
+                        // Se modo "reduz_prazo", recalcula parcela alvo também
+                        if (consortiumMode === 'reduz_prazo') {
+                            consTargetPayment = consTargetPayment * yearlyCorrection;
+                        }
+                    }
+                }
+
+                // ============================================
+                // FINANCIAMENTO - Lógica Principal
+                // ============================================
+                // 1. PV rende CDI
+                finPV = finPV * (1 + monthlyOpportunityCost);
+
+                // 2. Cálculo da Parcela
+                let finPayment = 0;
+                let finAmort = 0;
+                let finInterest = 0;
+
+                if (m <= params.termMonths && finDebtBalance > 0) {
+                    // Juros sempre sobre o saldo devedor atual
+                    finInterest = finDebtBalance * financingRateMonthly;
+
+                    if (params.amortization === 'SAC') {
+                        // SAC: Amortização = Saldo / Meses restantes
+                        // Isso garante que a parcela seja decrescente (juros diminuem)
+                        finAmort = finDebtBalance / finRemainingMonths;
+                        finPayment = finAmort + finInterest + 25; // +25 taxa administrativa
+                    } else {
+                        // PRICE: Parcela fixa (recalculada anualmente após correção)
+                        finPayment = finPricePayment + 25;
+                        finAmort = finPricePayment - finInterest;
+                        // Garante que amortização não seja negativa
+                        if (finAmort < 0) finAmort = 0;
+                    }
+
+                    // Atualiza saldo devedor
+                    finDebtBalance -= finAmort;
+                    if (finDebtBalance < 0) finDebtBalance = 0;
+
+                    // Atualiza meses restantes
+                    finRemainingMonths--;
+
+                    // 3. Parcela sai do PV
+                    finPV -= finPayment;
+                    finTotalPaid += finPayment;
+                }
+
+                // ============================================
+                // CONSÓRCIO - LÓGICA CONTRATUAL
+                // ============================================
+                // Este modelo segue as regras de um contrato de consórcio real.
+                // A amortização é FIXA após contemplação (não recalcula).
+                // Dois modos: reduz_prazo (parcela constante) ou reduz_parcela (prazo constante)
+
+                let consPayment = 0;
+                let consBidPayment = 0;
+                let consAmortization = 0;
+                let consTaxaAdm = 0;
+                let consFundoReserva = 0;
+                let consSeguro = 0;
+
+                // 1. Reserva rende CDI (rendimento bruto)
+                const monthlyYield = reserveBalance * cdiMonthly;
+                reserveGrossYield += monthlyYield;
+                reserveBalance += monthlyYield;
+
+                // 2. CONTEMPLAÇÃO (momento em que adquire o bem)
+                if (!consContemplated && m === contemplationMonth) {
+                    consContemplated = true;
+
+                    // Paga o lance (sai da reserva)
+                    if (params.consortiumBid > 0) {
+                        consBidPayment = params.consortiumBid;
+                        reserveBalance -= consBidPayment;
+
+                        // Lance abate do saldo devedor
+                        consDebtBalance -= consBidPayment;
+                        if (consDebtBalance < 0) consDebtBalance = 0;
+                    }
+
+                    // Define meses restantes do grupo
+                    consRemainingMonths = consTerm - m;
+                    if (consRemainingMonths < 1) consRemainingMonths = 1;
+                    consOriginalRemainingMonths = consRemainingMonths;
+
+                    // ========================================
+                    // CÁLCULO DA AMORTIZAÇÃO FIXA (uma única vez)
+                    // amortizacao_fixa = saldo_devedor_pos_lance / meses_restantes
+                    // ========================================
+                    consFixedAmortization = consDebtBalance / consRemainingMonths;
+
+                    // Calcula taxas iniciais para definir parcela alvo
+                    const taxaAdmInicial = (consAdminFeeRate / consTerm) * consLetterValue;
+                    const fundoReservaInicial = (consReserveFundRate / consTerm) * consLetterValue;
+                    const seguroInicial = (consInsuranceRate / 12) * consDebtBalance; // Taxa anual / 12
+
+                    // Parcela alvo (para modo reduz_prazo)
+                    consTargetPayment = consFixedAmortization + taxaAdmInicial + fundoReservaInicial + seguroInicial;
+                }
+
+                // 3. CÁLCULO MENSAL DA PARCELA
+                if (m <= consTerm && consDebtBalance > 0) {
+
+                    if (!consContemplated) {
+                        // ========== PRÉ-CONTEMPLAÇÃO ==========
+                        // Parcela fixa que INCLUI amortização (reduz saldo devedor)
+                        consPayment = consPreContempPayment;
+                        consAmortization = consPreContempAmortization;
+
+                        // Amortização reduz o saldo devedor mesmo antes da contemplação
+                        consDebtBalance -= consAmortization;
+                        if (consDebtBalance < 0) consDebtBalance = 0;
+
+                    } else {
+                        // ========== PÓS-CONTEMPLAÇÃO ==========
+                        // Amortização FIXA, taxas calculadas separadamente
+
+                        // Amortização: SEMPRE a mesma (fixa após contemplação)
+                        consAmortization = consFixedAmortization;
+
+                        // Taxas mensais (calculadas sobre valores atuais)
+                        // Taxa Adm e Fundo Reserva: percentual TOTAL dividido pelo prazo
+                        // Seguro: percentual ANUAL dividido por 12, sobre saldo devedor
+                        consTaxaAdm = (consAdminFeeRate / consTerm) * consLetterValue;
+                        consFundoReserva = (consReserveFundRate / consTerm) * consLetterValue;
+                        consSeguro = (consInsuranceRate / 12) * consDebtBalance; // Seguro: taxa anual / 12
+
+                        if (consortiumMode === 'reduz_prazo') {
+                            // ========================================
+                            // MODO REDUZ PRAZO: Parcela constante, prazo variável
+                            // Parcela = valor alvo (corrigido anualmente)
+                            // Se sobrar após taxas+amort, amortiza mais
+                            // ========================================
+                            const taxasTotais = consTaxaAdm + consFundoReserva + consSeguro;
+                            const disponiveParaAmort = consTargetPayment - taxasTotais;
+
+                            // Amortiza o que sobrar (pode ser mais que a fixa)
+                            consAmortization = Math.min(disponiveParaAmort, consDebtBalance);
+                            if (consAmortization < 0) consAmortization = consFixedAmortization;
+
+                            consPayment = consTargetPayment;
+
+                        } else {
+                            // ========================================
+                            // MODO REDUZ PARCELA: Prazo constante, parcela variável
+                            // Parcela = amort_fixa + taxas (varia com saldo devedor)
+                            // ========================================
+                            consPayment = consAmortization + consTaxaAdm + consFundoReserva + consSeguro;
+                        }
+
+                        // Garante que amortização não exceda saldo
+                        if (consAmortization > consDebtBalance) {
+                            consAmortization = consDebtBalance;
+                        }
+
+                        // Atualiza saldo devedor (apenas pela amortização)
+                        consDebtBalance -= consAmortization;
+                        if (consDebtBalance < 0) consDebtBalance = 0;
+
+                        // Atualiza meses restantes
+                        consRemainingMonths--;
+                        if (consRemainingMonths < 1) consRemainingMonths = 1;
+                    }
+
+                    // Parcela sai da reserva
+                    reserveBalance -= consPayment;
+                }
+
+                // Total pago no consórcio
+                consTotalPaid += consPayment + consBidPayment;
+
+                // ============================================
+                // COMPRA À VISTA - Lógica Principal
+                // ============================================
+                // Custo fixo: desembolsou o valor de mercado para comprar o imóvel
+                // Aporte mensal FIXO = Valor de Mercado / Prazo do Consórcio
+                // Faz aportes durante todo o prazo do consórcio
+                // Após o prazo: patrimônio líquido rende CDI diretamente
+
+                if (m <= cashPaymentMonths) {
+                    // Durante fase de aportes: investimentos rendem CDI + novo aporte
+                    cashInvestments = cashInvestments * (1 + cdiMonthly);
+                    cashInvestments += cashFixedPayment;
+                    totalPaidCash += cashFixedPayment;
+                    // Atualiza patrimônio líquido
+                    cashNetWorthAccum = cashInvestments - cashCost;
+                } else {
+                    // Após o prazo: patrimônio líquido rende CDI diretamente
+                    cashNetWorthAccum = cashNetWorthAccum * (1 + cdiMonthly);
+                }
+
+                // ============================================
+                // CÁLCULO DO PATRIMÔNIO (só dinheiro, sem imóvel)
+                // ============================================
+                // Todos terão o imóvel no final, então comparamos só o DINHEIRO
+
+                // Financiamento: PV restante
+                const finNetWorth = finPV;
+
+                // Consórcio: Saldo da reserva investida
+                const consNetWorth = reserveBalance;
+
+                // Compra à Vista: patrimônio líquido acumulado
+                const cashNetWorth = cashNetWorthAccum;
+
+                flows.push({
+                    month: m,
+                    // Compra à Vista
+                    cashNetWorth: cashNetWorth,
+                    cashInvestments: cashInvestments,
+                    cashPayment: m <= cashPaymentMonths ? cashFixedPayment : 0, // Aporte fixo por 200 meses
+                    // Financiamento
+                    financingPayment: finPayment,
+                    financingPV: finPV,
+                    financingDebtBalance: finDebtBalance,
+                    financingNetWorth: finNetWorth,
+                    // Consórcio - Detalhamento completo
+                    consortiumPayment: consPayment, // Apenas parcela mensal (sem lance)
+                    consortiumTotalPayment: consPayment + consBidPayment, // Parcela + lance
+                    consortiumAmortization: consAmortization,
+                    consortiumTaxaAdm: consTaxaAdm,
+                    consortiumFundoReserva: consFundoReserva,
+                    consortiumSeguro: consSeguro,
+                    consortiumBid: consBidPayment,
+                    consortiumReserve: reserveBalance,
+                    consortiumDebtBalance: consDebtBalance,
+                    consortiumRemainingMonths: consRemainingMonths,
+                    consortiumContemplated: consContemplated,
+                    consortiumNetWorth: consNetWorth,
+                    consortiumLetter: consLetterValue
+                });
+            }
+
+            const lastFlow = flows[flows.length - 1];
+            const contempFlow = flows[contemplationMonth - 1] || lastFlow;
+
+            // Debug: mostrar valores
+            console.log('=== RESULTADO FINAL - MODELO CONTRATUAL ===');
+            console.log('Modo do consórcio:', consortiumMode);
+            console.log('Mês de contemplação:', contemplationMonth);
+            console.log('Amortização fixa (pós-contemp):', consFixedAmortization.toFixed(2));
+            console.log('Parcela alvo (modo reduz_prazo):', consTargetPayment.toFixed(2));
+            console.log('Taxa de seguro anual:', (consInsuranceRate * 100).toFixed(2) + '%');
+            console.log('---');
+            console.log('Compra à Vista - Custo inicial:', params.assetValue);
+            console.log('Compra à Vista - Aporte mensal:', cashFixedPayment.toFixed(2), '×', cashPaymentMonths, 'meses');
+            console.log('---');
+            console.log('Compra à Vista (saldo final):', lastFlow.cashNetWorth.toFixed(0));
+            console.log('Consórcio (reserva final):', lastFlow.consortiumNetWorth.toFixed(0));
+            console.log('Financiamento (PV final):', lastFlow.financingNetWorth.toFixed(0));
+
+            // Debug: mostrar diferença entre modos
+            if (consInsuranceRate === 0) {
+                console.log('⚠️ ATENÇÃO: Com seguro = 0%, os modos reduz_prazo e reduz_parcela terão parcelas idênticas!');
+            }
+
+            return {
+                summary: {
+                    totalPaidFinancing: finTotalPaid,
+                    totalPaidConsortium: consTotalPaid,
+                    totalPaidCash,
+                    contemplationMonth,
+                    // Compra à Vista
+                    finalNetWorthCash: lastFlow.cashNetWorth,
+                    finalCashInvestments: lastFlow.cashInvestments,
+                    // Financiamento
+                    finalNetWorthFinancing: lastFlow.financingNetWorth,
+                    finalFinPV: lastFlow.financingPV,
+                    finalFinDebt: lastFlow.financingDebtBalance,
+                    // Consórcio
+                    finalNetWorthConsortium: lastFlow.consortiumNetWorth,
+                    finalConsReserve: lastFlow.consortiumReserve,
+                    finalConsDebt: lastFlow.consortiumDebtBalance,
+                    // Na contemplação
+                    contempReserve: contempFlow.consortiumReserve,
+                    contempDebt: contempFlow.consortiumDebtBalance,
+                    contempNetWorth: contempFlow.consortiumNetWorth
+                },
+                flows
+            };
+        }
+
+        function calculate() {
+            const params = getParams();
+            const result = calculateSimulation(params);
+
+            // Update KPIs
+            document.getElementById('kpiConsortium').textContent = formatCurrency(result.summary.finalNetWorthConsortium);
+            document.getElementById('kpiFinancing').textContent = formatCurrency(result.summary.finalNetWorthFinancing);
+            document.getElementById('kpiInvestment').textContent = formatCurrency(result.summary.finalNetWorthCash);
+
+            // Consórcio detail
+            const contempYear = Math.ceil(result.summary.contemplationMonth / 12);
+            document.getElementById('kpiConsortiumDetail').textContent = `Contemplação: ${contempYear}º ano | Reserva: ${formatCurrency(result.summary.finalConsReserve)}`;
+
+            document.getElementById('kpiFinancingPaid').textContent = `PV final: ${formatCurrency(result.summary.finalFinPV)}`;
+            const aporteFixo = params.assetValue / params.consortiumTerm;
+            document.getElementById('kpiCashDetail').textContent = `Aporte: ${formatCurrency(aporteFixo)}/mês × ${params.consortiumTerm} meses`;
+
+            const maxMonths = Math.max(params.termMonths, params.consortiumTerm);
+            document.getElementById('analysisSubtitle').textContent = `Comparativo de Eficiência Financeira em ${Math.floor(maxMonths / 12)} anos`;
+
+            // Sample data for chart (every 12 months + contemplation month)
+            const contemplationIdx = result.summary.contemplationMonth - 1;
+            const sampledFlows = result.flows.filter((f, i) => {
+                // Inclui: mês 1, cada ano (12, 24, 36...), e o mês da contemplação
+                return i % 12 === 0 || i === contemplationIdx;
+            });
+            // Remove duplicatas e ordena
+            const uniqueFlows = [...new Map(sampledFlows.map(f => [f.month, f])).values()];
+            uniqueFlows.sort((a, b) => a.month - b.month);
+
+            const labels = uniqueFlows.map(f => {
+                if (f.month === result.summary.contemplationMonth) {
+                    return `C${f.month}`; // Marca o mês de contemplação
+                }
+                return `${Math.ceil(f.month / 12)}A`;
+            });
+
+            // Net Worth Chart
+            if (netWorthChart) netWorthChart.destroy();
+            const ctx1 = document.getElementById('netWorthChart').getContext('2d');
+            netWorthChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consórcio',
+                            data: uniqueFlows.map(f => f.consortiumNetWorth),
+                            borderColor: '#D4B483',
+                            backgroundColor: 'rgba(212, 180, 131, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Financiamento',
+                            data: uniqueFlows.map(f => f.financingNetWorth),
+                            borderColor: '#2563EB',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Compra à Vista',
+                            data: uniqueFlows.map(f => f.cashNetWorth),
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#B0BEC5' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#16424D' },
+                            ticks: { color: '#B0BEC5' }
+                        },
+                        y: {
+                            grid: { color: '#16424D' },
+                            ticks: {
+                                color: '#B0BEC5',
+                                callback: function(value) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Cash Flow Chart
+            if (cashFlowChart) cashFlowChart.destroy();
+            const ctx2 = document.getElementById('cashFlowChart').getContext('2d');
+            cashFlowChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Parcela Consórcio',
+                            data: uniqueFlows.map(f => f.consortiumPayment),
+                            borderColor: '#D4B483',
+                            backgroundColor: 'transparent',
+                            stepped: true,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Parcela Financiamento',
+                            data: uniqueFlows.map(f => f.financingPayment),
+                            borderColor: '#2563EB',
+                            backgroundColor: 'transparent',
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Aporte À Vista',
+                            data: uniqueFlows.map(f => f.cashPayment),
+                            borderColor: '#10B981',
+                            backgroundColor: 'transparent',
+                            borderDash: [5, 5],
+                            stepped: true,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#B0BEC5' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#16424D' },
+                            ticks: { color: '#B0BEC5' }
+                        },
+                        y: {
+                            grid: { color: '#16424D' },
+                            ticks: {
+                                color: '#B0BEC5',
+                                callback: function(value) {
+                                    return (value / 1000).toFixed(0) + 'k';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
