@@ -1,6 +1,25 @@
 # Changelog - Comparador Financeiro Standalone
 
-## Versão Final (2026-02-08)
+## Versão Final (2026-02-10)
+
+### Últimas Atualizações
+
+#### UI/UX
+- Logo Alphaways adicionado na tela de simulação (ao lado de "Análise Patrimonial")
+- Logo com fundo branco e border-radius para melhor visibilidade
+- Animações CSS de fundo na tela inicial (dashboard):
+  - Gráficos de linha (dourado, azul, verde) no topo da tela
+  - Gráficos de barras animados na parte inferior
+  - Animações não cruzam a área de texto central
+
+#### Correções
+- Gráfico agora inclui o mês exato da contemplação (marcado como "C24")
+- Lance não aparece mais no gráfico de fluxo de caixa (apenas parcela mensal)
+- Pré-contemplação agora amortiza o saldo devedor corretamente
+
+---
+
+## Versão Anterior (2026-02-08)
 
 ### Resumo
 Comparador financeiro que analisa 3 cenários de aquisição de bens:
