@@ -473,6 +473,84 @@
 
         .hidden { display: none !important; }
 
+        /* Zoom Slider */
+        .zoom-slider-container {
+            margin-top: 1rem;
+            padding: 0.5rem 0;
+        }
+
+        .zoom-slider-track {
+            position: relative;
+            height: 8px;
+            background: var(--petrol-deep);
+            border-radius: 4px;
+            margin: 0 10px;
+        }
+
+        .zoom-slider-range {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, #4a5568, #718096);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        .zoom-slider {
+            position: absolute;
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            pointer-events: none;
+            top: 0;
+            left: 0;
+        }
+
+        .zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #a0aec0, #718096);
+            border-radius: 50%;
+            cursor: grab;
+            pointer-events: all;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 2px solid white;
+            margin-top: -6px;
+        }
+
+        .zoom-slider::-webkit-slider-thumb:hover {
+            background: linear-gradient(135deg, #cbd5e0, #a0aec0);
+            transform: scale(1.1);
+        }
+
+        .zoom-slider::-webkit-slider-thumb:active {
+            cursor: grabbing;
+        }
+
+        .zoom-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #a0aec0, #718096);
+            border-radius: 50%;
+            cursor: grab;
+            pointer-events: all;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 2px solid white;
+        }
+
+        .zoom-labels {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--silver);
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .simulation.active {
                 flex-direction: column;
@@ -584,8 +662,8 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>Valorização Anual (%)</label>
-                    <input type="number" id="appreciationRate" value="5" step="0.1" onchange="calculate()">
+                    <label>Inflação Anual (%)</label>
+                    <input type="number" id="inflationRate" value="5" step="0.1" onchange="calculate()">
                 </div>
                 <div class="form-group">
                     <label>Taxa Selic/CDI (% a.a.)</label>
@@ -742,26 +820,39 @@
 
             <div class="kpi-grid">
                 <div class="kpi-card">
-                    <div class="title">Consórcio (Saldo Final)</div>
+                    <div class="title">Consórcio (Valor Presente)</div>
                     <div class="value gold" id="kpiConsortium">R$ 0</div>
-                    <div class="subtext" id="kpiConsortiumDetail">PV restante após parcelas</div>
+                    <div class="subtext" id="kpiConsortiumDetail">Em valores de hoje</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="title">Financiamento (Saldo Final)</div>
+                    <div class="title">Financiamento (Valor Presente)</div>
                     <div class="value blue" id="kpiFinancing">R$ 0</div>
                     <div class="subtext" id="kpiFinancingPaid">PV restante após parcelas</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="title">Compra à Vista (Saldo Final)</div>
+                    <div class="title">Compra à Vista (Valor Presente)</div>
                     <div class="value green" id="kpiInvestment">R$ 0</div>
                     <div class="subtext" id="kpiCashDetail">-500k + Aportes CDI</div>
                 </div>
             </div>
 
             <div class="chart-container">
-                <h3>Evolução do Saldo em Dinheiro (R$) - Todos têm imóvel</h3>
+                <h3>Evolução do Saldo em Dinheiro - Valor Presente (R$)</h3>
                 <div class="chart-wrapper">
                     <canvas id="netWorthChart"></canvas>
+                </div>
+                <!-- Range Slider para Zoom -->
+                <div class="zoom-slider-container">
+                    <div class="zoom-slider-track">
+                        <div class="zoom-slider-range" id="zoomRange"></div>
+                        <input type="range" id="zoomStart" min="1" max="30" value="1" class="zoom-slider zoom-slider-left" oninput="updateZoomSlider()">
+                        <input type="range" id="zoomEnd" min="1" max="30" value="30" class="zoom-slider zoom-slider-right" oninput="updateZoomSlider()">
+                    </div>
+                    <div class="zoom-labels">
+                        <span id="zoomLabelStart">1 ano</span>
+                        <span style="color: var(--silver); font-size: 0.7rem;">Arraste para ajustar o período</span>
+                        <span id="zoomLabelEnd">30 anos</span>
+                    </div>
                 </div>
             </div>
 
@@ -777,12 +868,62 @@
     <script>
         let netWorthChart = null;
         let cashFlowChart = null;
+        let lastCalculationResult = null; // Armazena último resultado para zoom
+
+        function setZoom(start, end) {
+            document.getElementById('zoomStart').value = start;
+            document.getElementById('zoomEnd').value = end;
+            updateZoomSlider();
+        }
+
+        function updateZoomSlider() {
+            const startSlider = document.getElementById('zoomStart');
+            const endSlider = document.getElementById('zoomEnd');
+            const range = document.getElementById('zoomRange');
+            const labelStart = document.getElementById('zoomLabelStart');
+            const labelEnd = document.getElementById('zoomLabelEnd');
+
+            let startVal = parseInt(startSlider.value);
+            let endVal = parseInt(endSlider.value);
+
+            // Garante que start < end
+            if (startVal >= endVal) {
+                if (this === startSlider) {
+                    startVal = endVal - 1;
+                    startSlider.value = startVal;
+                } else {
+                    endVal = startVal + 1;
+                    endSlider.value = endVal;
+                }
+            }
+
+            // Atualiza a barra visual
+            const max = parseInt(startSlider.max);
+            const percentStart = ((startVal - 1) / (max - 1)) * 100;
+            const percentEnd = ((endVal - 1) / (max - 1)) * 100;
+            range.style.left = percentStart + '%';
+            range.style.width = (percentEnd - percentStart) + '%';
+
+            // Atualiza labels
+            labelStart.textContent = startVal + (startVal === 1 ? ' ano' : ' anos');
+            labelEnd.textContent = endVal + ' anos';
+
+            // Atualiza gráfico
+            if (lastCalculationResult) {
+                updateCharts(lastCalculationResult);
+            }
+        }
+
+        function updateZoom() {
+            updateZoomSlider();
+        }
 
         function showSimulation() {
             document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('simulation').classList.add('active');
             updateOpportunityCost(); // Inicializa o custo de oportunidade
             updateSwitchLabels(); // Inicializa labels dos switches
+            setTimeout(updateZoomSlider, 100); // Inicializa o slider de zoom
         }
 
         function updateSwitchLabels() {
@@ -847,7 +988,7 @@
 
             return {
                 assetValue: parseFloat(document.getElementById('assetValue').value) || 500000,
-                appreciationRate: parseFloat(document.getElementById('appreciationRate').value) || 5,
+                inflationRate: Number(document.getElementById('inflationRate').value) || 0,
                 opportunityCost: monthlyOpportunityCost, // Calculado a partir da Selic
                 cdiAnnual: selicAnnual, // CDI anual para cálculo de IR
                 downPayment: parseFloat(document.getElementById('downPayment').value) || 100000,
@@ -884,7 +1025,7 @@
             const flows = [];
 
             // Common Constants
-            const monthlyAppreciation = Math.pow(1 + params.appreciationRate / 100, 1 / 12) - 1;
+            const annualInflation = params.inflationRate / 100;
             const monthlyOpportunityCost = params.opportunityCost / 100;
 
             // ============================================
@@ -1246,25 +1387,24 @@
             const lastFlow = flows[flows.length - 1];
             const contempFlow = flows[contemplationMonth - 1] || lastFlow;
 
+            // Calcula valor presente (desconta inflação)
+            const totalYears = maxMonths / 12;
+            const pvFactor = Math.pow(1 + annualInflation, totalYears);
+
+            const pvCash = lastFlow.cashNetWorth / pvFactor;
+            const pvConsortium = lastFlow.consortiumNetWorth / pvFactor;
+            const pvFinancing = lastFlow.financingNetWorth / pvFactor;
+
             // Debug: mostrar valores
             console.log('=== RESULTADO FINAL - MODELO CONTRATUAL ===');
             console.log('Modo do consórcio:', consortiumMode);
             console.log('Mês de contemplação:', contemplationMonth);
-            console.log('Amortização fixa (pós-contemp):', consFixedAmortization.toFixed(2));
-            console.log('Parcela alvo (modo reduz_prazo):', consTargetPayment.toFixed(2));
-            console.log('Taxa de seguro anual:', (consInsuranceRate * 100).toFixed(2) + '%');
+            console.log('Inflação anual:', (annualInflation * 100).toFixed(2) + '%');
+            console.log('Fator de desconto (', totalYears, 'anos):', pvFactor.toFixed(4));
             console.log('---');
-            console.log('Compra à Vista - Custo inicial:', params.assetValue);
-            console.log('Compra à Vista - Aporte mensal:', cashFixedPayment.toFixed(2), '×', contributionMonths, 'meses');
-            console.log('---');
-            console.log('Compra à Vista (saldo final):', lastFlow.cashNetWorth.toFixed(0));
-            console.log('Consórcio (reserva final):', lastFlow.consortiumNetWorth.toFixed(0));
-            console.log('Financiamento (PV final):', lastFlow.financingNetWorth.toFixed(0));
-
-            // Debug: mostrar diferença entre modos
-            if (consInsuranceRate === 0) {
-                console.log('⚠️ ATENÇÃO: Com seguro = 0%, os modos reduz_prazo e reduz_parcela terão parcelas idênticas!');
-            }
+            console.log('Compra à Vista - Nominal:', lastFlow.cashNetWorth.toFixed(0), '| VP:', pvCash.toFixed(0));
+            console.log('Consórcio - Nominal:', lastFlow.consortiumNetWorth.toFixed(0), '| VP:', pvConsortium.toFixed(0));
+            console.log('Financiamento - Nominal:', lastFlow.financingNetWorth.toFixed(0), '| VP:', pvFinancing.toFixed(0));
 
             return {
                 summary: {
@@ -1272,17 +1412,21 @@
                     totalPaidConsortium: consTotalPaid,
                     totalPaidCash,
                     contemplationMonth,
+                    totalYears,
                     // Compra à Vista
                     finalNetWorthCash: lastFlow.cashNetWorth,
                     finalCashInvestments: lastFlow.cashInvestments,
+                    pvCash,
                     // Financiamento
                     finalNetWorthFinancing: lastFlow.financingNetWorth,
                     finalFinPV: lastFlow.financingPV,
                     finalFinDebt: lastFlow.financingDebtBalance,
+                    pvFinancing,
                     // Consórcio
                     finalNetWorthConsortium: lastFlow.consortiumNetWorth,
                     finalConsReserve: lastFlow.consortiumReserve,
                     finalConsDebt: lastFlow.consortiumDebtBalance,
+                    pvConsortium,
                     // Na contemplação
                     contempReserve: contempFlow.consortiumReserve,
                     contempDebt: contempFlow.consortiumDebtBalance,
@@ -1296,27 +1440,48 @@
             const params = getParams();
             const result = calculateSimulation(params);
 
-            // Update KPIs
-            document.getElementById('kpiConsortium').textContent = formatCurrency(result.summary.finalNetWorthConsortium);
-            document.getElementById('kpiFinancing').textContent = formatCurrency(result.summary.finalNetWorthFinancing);
-            document.getElementById('kpiInvestment').textContent = formatCurrency(result.summary.finalNetWorthCash);
+            // Armazena resultado para zoom
+            lastCalculationResult = { result, params };
 
-            // Consórcio detail
+            // Update KPIs - Mostra Valor Presente (em valores de hoje)
+            document.getElementById('kpiConsortium').textContent = formatCurrency(result.summary.pvConsortium);
+            document.getElementById('kpiFinancing').textContent = formatCurrency(result.summary.pvFinancing);
+            document.getElementById('kpiInvestment').textContent = formatCurrency(result.summary.pvCash);
+
+            // Detalhes - mostra valor nominal entre parênteses
             const contempYear = Math.ceil(result.summary.contemplationMonth / 12);
-            document.getElementById('kpiConsortiumDetail').textContent = `Contemplação: ${contempYear}º ano | Reserva: ${formatCurrency(result.summary.finalConsReserve)}`;
+            document.getElementById('kpiConsortiumDetail').textContent = `Nominal: ${formatCurrency(result.summary.finalNetWorthConsortium)} | Contemp: ${contempYear}º ano`;
 
-            document.getElementById('kpiFinancingPaid').textContent = `PV final: ${formatCurrency(result.summary.finalFinPV)}`;
-            const maxMonthsDisplay = Math.max(params.termMonths, params.consortiumTerm);
-            document.getElementById('kpiCashDetail').textContent = `Aporte: ${formatCurrency(params.monthlyContribution)}/mês × ${maxMonthsDisplay} meses`;
+            document.getElementById('kpiFinancingPaid').textContent = `Nominal: ${formatCurrency(result.summary.finalNetWorthFinancing)}`;
+            document.getElementById('kpiCashDetail').textContent = `Nominal: ${formatCurrency(result.summary.finalNetWorthCash)}`;
 
             const maxMonths = Math.max(params.termMonths, params.consortiumTerm);
             document.getElementById('analysisSubtitle').textContent = `Comparativo de Eficiência Financeira em ${Math.floor(maxMonths / 12)} anos`;
 
+            // Atualiza zoom máximo
+            const maxYears = Math.floor(maxMonths / 12);
+            document.getElementById('zoomEnd').max = maxYears;
+            document.getElementById('zoomStart').max = maxYears;
+
+            // Atualiza gráficos
+            updateCharts(lastCalculationResult);
+        }
+
+        function updateCharts({ result, params }) {
+            // Pega range do zoom (em anos)
+            const zoomStartYear = parseInt(document.getElementById('zoomStart').value) || 1;
+            const zoomEndYear = parseInt(document.getElementById('zoomEnd').value) || 30;
+            const zoomStartMonth = (zoomStartYear - 1) * 12;
+            const zoomEndMonth = zoomEndYear * 12;
+
             // Sample data for chart (every 12 months + contemplation month)
             const contemplationIdx = result.summary.contemplationMonth - 1;
+            const lastIdx = result.flows.length - 1;
             const sampledFlows = result.flows.filter((f, i) => {
-                // Inclui: mês 1, cada ano (12, 24, 36...), e o mês da contemplação
-                return i % 12 === 0 || i === contemplationIdx;
+                // Filtra pelo zoom
+                if (f.month < zoomStartMonth || f.month > zoomEndMonth) return false;
+                // Inclui: cada ano (12, 24, 36...), mês da contemplação, e último mês
+                return i % 12 === 0 || i === contemplationIdx || i === lastIdx;
             });
             // Remove duplicatas e ordena
             const uniqueFlows = [...new Map(sampledFlows.map(f => [f.month, f])).values()];
@@ -1329,7 +1494,15 @@
                 return `${Math.ceil(f.month / 12)}A`;
             });
 
-            // Net Worth Chart
+            // Função para calcular valor presente de cada mês
+            const annualInflation = params.inflationRate / 100;
+            const toPresentValue = (value, month) => {
+                if (annualInflation === 0) return value;
+                const years = month / 12;
+                return value / Math.pow(1 + annualInflation, years);
+            };
+
+            // Net Worth Chart - Em Valor Presente
             if (netWorthChart) netWorthChart.destroy();
             const ctx1 = document.getElementById('netWorthChart').getContext('2d');
             netWorthChart = new Chart(ctx1, {
@@ -1338,8 +1511,8 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Consórcio',
-                            data: uniqueFlows.map(f => f.consortiumNetWorth),
+                            label: 'Consórcio (VP)',
+                            data: uniqueFlows.map(f => toPresentValue(f.consortiumNetWorth, f.month)),
                             borderColor: '#D4B483',
                             backgroundColor: 'rgba(212, 180, 131, 0.1)',
                             fill: true,
@@ -1347,8 +1520,8 @@
                             borderWidth: 3
                         },
                         {
-                            label: 'Financiamento',
-                            data: uniqueFlows.map(f => f.financingNetWorth),
+                            label: 'Financiamento (VP)',
+                            data: uniqueFlows.map(f => toPresentValue(f.financingNetWorth, f.month)),
                             borderColor: '#2563EB',
                             backgroundColor: 'rgba(37, 99, 235, 0.1)',
                             fill: true,
@@ -1356,8 +1529,8 @@
                             borderWidth: 2
                         },
                         {
-                            label: 'Compra à Vista',
-                            data: uniqueFlows.map(f => f.cashNetWorth),
+                            label: 'Compra à Vista (VP)',
+                            data: uniqueFlows.map(f => toPresentValue(f.cashNetWorth, f.month)),
                             borderColor: '#10B981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
                             fill: true,

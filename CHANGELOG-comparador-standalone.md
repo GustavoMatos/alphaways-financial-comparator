@@ -1,5 +1,28 @@
 # Changelog - Comparador Financeiro Standalone
 
+## Versão 2.1 (2026-02-15)
+
+### Novas Funcionalidades
+
+#### Zoom no Gráfico
+- Barra de zoom dupla embaixo do gráfico de Evolução Patrimonial
+- Duas bolinhas arrastáveis para selecionar o período (ex: 5 a 15 anos)
+- Visual em cinza com borda branca
+
+#### Inflação e Valor Presente
+- Campo "Inflação Anual (%)" substituiu "Valorização Anual"
+- Todos os saldos finais são trazidos a Valor Presente (valores de hoje)
+- Gráfico de Evolução do Saldo mostra VP em cada ponto
+- KPIs mostram Valor Presente com valor Nominal no detalhe
+- Fórmula: VP = Nominal / (1 + inflação)^anos
+
+#### Correções
+- Último mês da projeção agora aparece corretamente no gráfico
+- Valores nominais do gráfico agora batem com os KPIs
+- Inflação = 0% agora funciona corretamente (mostra nominal)
+
+---
+
 ## Versão 2.0 (2026-02-12)
 
 ### Novas Funcionalidades
