@@ -570,6 +570,217 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ========== ESTILOS DE IMPRESSÃO / PDF ========== */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Remove cabeçalho e rodapé do navegador (URL, data, etc) */
+            @page {
+                margin: 10mm 10mm 10mm 10mm;
+                size: A4 landscape;
+            }
+
+            body {
+                background: white !important;
+                color: #1a1a1a !important;
+                font-size: 11px !important;
+            }
+
+            /* Esconde elementos desnecessários */
+            .sidebar,
+            .back-btn,
+            .zoom-slider-container,
+            .btn,
+            .btn-outline,
+            #dashboard {
+                display: none !important;
+            }
+
+            /* Layout principal */
+            .simulation {
+                display: block !important;
+                height: auto !important;
+            }
+
+            .simulation.active {
+                display: block !important;
+            }
+
+            .main-content {
+                width: 100% !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+
+            /* Cabeçalho */
+            .results-header {
+                border-bottom: 2px solid #D4B483 !important;
+                padding-bottom: 15px !important;
+                margin-bottom: 20px !important;
+            }
+
+            .results-header img {
+                height: 50px !important;
+            }
+
+            .results-header h2 {
+                color: #1a1a1a !important;
+                font-size: 20px !important;
+            }
+
+            .results-header p {
+                color: #666 !important;
+            }
+
+            /* KPIs */
+            .kpi-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 15px !important;
+                margin-bottom: 25px !important;
+            }
+
+            .kpi-card {
+                background: #f8f9fa !important;
+                border: 1px solid #dee2e6 !important;
+                padding: 15px !important;
+                border-radius: 8px !important;
+                text-align: center !important;
+            }
+
+            .kpi-card .title {
+                color: #666 !important;
+                font-size: 9px !important;
+                margin-bottom: 5px !important;
+            }
+
+            .kpi-card .value {
+                font-size: 18px !important;
+                font-weight: bold !important;
+            }
+
+            .kpi-card .value.gold { color: #B8860B !important; }
+            .kpi-card .value.blue { color: #1e40af !important; }
+            .kpi-card .value.green { color: #047857 !important; }
+
+            .kpi-card .subtext {
+                color: #888 !important;
+                font-size: 8px !important;
+            }
+
+            /* Gráficos */
+            .chart-container {
+                background: white !important;
+                border: 1px solid #dee2e6 !important;
+                padding: 20px !important;
+                padding-bottom: 55px !important;
+                margin-bottom: 15px !important;
+                page-break-inside: avoid !important;
+                overflow: visible !important;
+            }
+
+            /* Segundo gráfico - mais espaço acima */
+            .chart-container + .chart-container {
+                margin-top: 70px !important;
+            }
+
+            .chart-container h3 {
+                color: #1a1a1a !important;
+                font-size: 12px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .chart-wrapper {
+                height: 300px !important;
+                overflow: visible !important;
+                padding-bottom: 10px !important;
+            }
+
+            /* Segundo gráfico em nova página */
+            .chart-container:last-of-type {
+                page-break-before: auto !important;
+            }
+
+            /* Resumo dos parâmetros - será adicionado via JS */
+            .print-params-summary {
+                display: block !important;
+                background: #f8f9fa !important;
+                border: 1px solid #dee2e6 !important;
+                border-radius: 8px !important;
+                padding: 15px !important;
+                margin-bottom: 20px !important;
+                page-break-after: avoid !important;
+            }
+
+            .print-params-summary h4 {
+                color: #1a1a1a !important;
+                font-size: 11px !important;
+                margin-bottom: 10px !important;
+                border-bottom: 1px solid #dee2e6 !important;
+                padding-bottom: 5px !important;
+            }
+
+            .print-params-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 8px !important;
+                font-size: 9px !important;
+            }
+
+            .print-param {
+                background: white !important;
+                padding: 5px 8px !important;
+                border-radius: 4px !important;
+                border: 1px solid #e9ecef !important;
+            }
+
+            .print-param-label {
+                color: #888 !important;
+                font-size: 7px !important;
+                text-transform: uppercase !important;
+            }
+
+            .print-param-value {
+                color: #1a1a1a !important;
+                font-weight: bold !important;
+                font-size: 10px !important;
+            }
+        }
+
+        /* Classe para esconder na tela mas mostrar na impressão */
+        .print-only {
+            display: none !important;
+        }
+
+        @media print {
+            .print-only {
+                display: block !important;
+            }
+
+            .print-disclaimer {
+                margin-top: 25px !important;
+                padding: 12px !important;
+                background: #f8f9fa !important;
+                border: 1px solid #dee2e6 !important;
+                border-radius: 6px !important;
+                font-size: 8px !important;
+                color: #666 !important;
+                line-height: 1.4 !important;
+                text-align: justify !important;
+            }
+
+            .print-disclaimer p {
+                margin: 0 !important;
+            }
+
+            .print-disclaimer strong {
+                color: #333 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -798,7 +1009,7 @@
             </div>
 
             <div style="margin-top: 2rem;">
-                <button class="btn btn-outline" style="width: 100%;" onclick="window.print()">
+                <button class="btn btn-outline" style="width: 100%;" onclick="generatePDF()">
                     Gerar Relatório PDF
                 </button>
             </div>
@@ -815,6 +1026,14 @@
                         <h2 style="margin: 0;">Análise Patrimonial</h2>
                         <p id="analysisSubtitle" style="margin: 0.25rem 0 0 0;">Comparativo de Eficiência Financeira em 30 anos</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Resumo dos Parâmetros - Só aparece no PDF -->
+            <div class="print-params-summary print-only" id="printParamsSummary">
+                <h4>Parâmetros da Simulação</h4>
+                <div class="print-params-grid" id="printParamsGrid">
+                    <!-- Preenchido via JavaScript -->
                 </div>
             </div>
 
@@ -861,6 +1080,11 @@
                 <div class="chart-wrapper" style="height: 250px;">
                     <canvas id="cashFlowChart"></canvas>
                 </div>
+            </div>
+
+            <!-- Disclaimer - Só aparece no PDF -->
+            <div class="print-disclaimer print-only">
+                <p><strong>Aviso Legal:</strong> Este relatório é disponibilizado exclusivamente para fins educacionais e de estudo, não constituindo oferta, recomendação ou aconselhamento financeiro. As taxas, índices e valores apresentados são meramente ilustrativos e podem não refletir as condições reais de mercado no momento da contratação. Recomenda-se que o cliente consulte as instituições financeiras e administradoras de consórcio para obter informações atualizadas sobre taxas, prazos e condições vigentes antes de tomar qualquer decisão de contratação.</p>
             </div>
         </div>
     </div>
@@ -1647,6 +1871,81 @@
                     }
                 }
             });
+        }
+
+        // Gera PDF com resumo dos parâmetros
+        function generatePDF() {
+            const params = getParams();
+
+            // Formata valores para exibição
+            const formatMoney = (v) => 'R$ ' + v.toLocaleString('pt-BR');
+            const formatPercent = (v) => v + '%';
+
+            // Monta o resumo dos parâmetros
+            const paramsData = [
+                { label: 'Valor do Bem', value: formatMoney(params.assetValue) },
+                { label: 'Inflação Anual', value: formatPercent(params.inflationRate) },
+                { label: 'Selic/CDI', value: formatPercent(getSelicRate()) },
+                { label: 'Capital Reserva', value: formatMoney(params.reserveCapital) },
+                { label: 'Aporte Mensal', value: formatMoney(params.monthlyContribution) },
+                { label: 'Carta Consórcio', value: formatMoney(params.consortiumLetter) },
+                { label: 'Prazo Consórcio', value: params.consortiumTerm + ' meses' },
+                { label: 'Taxa Adm.', value: formatPercent(params.consortiumFee) },
+                { label: 'Fundo Reserva', value: formatPercent(params.consortiumReserveFund) },
+                { label: 'Seguro', value: formatPercent(params.consortiumInsurance) + ' a.a.' },
+                { label: 'Correção Anual', value: formatPercent(params.consortiumCorrection) },
+                { label: 'Contemplação', value: 'Mês ' + params.contemplationMonth },
+                { label: 'Lance', value: formatMoney(params.consortiumBid) },
+                { label: 'Entrada Financ.', value: formatMoney(params.downPayment) },
+                { label: 'Prazo Financ.', value: params.termMonths + ' meses' },
+                { label: 'CET Financ.', value: formatPercent(params.financingRate) + ' a.a.' },
+            ];
+
+            // Preenche o grid de parâmetros
+            const grid = document.getElementById('printParamsGrid');
+            grid.innerHTML = paramsData.map(p => `
+                <div class="print-param">
+                    <div class="print-param-label">${p.label}</div>
+                    <div class="print-param-value">${p.value}</div>
+                </div>
+            `).join('');
+
+            // Muda cores das legendas dos gráficos para impressão (cinza escuro)
+            const printLegendColor = '#374151';
+            if (netWorthChart) {
+                netWorthChart.options.plugins.legend.labels.color = printLegendColor;
+                netWorthChart.options.scales.x.ticks.color = printLegendColor;
+                netWorthChart.options.scales.y.ticks.color = printLegendColor;
+                netWorthChart.update();
+            }
+            if (cashFlowChart) {
+                cashFlowChart.options.plugins.legend.labels.color = printLegendColor;
+                cashFlowChart.options.scales.x.ticks.color = printLegendColor;
+                cashFlowChart.options.scales.y.ticks.color = printLegendColor;
+                cashFlowChart.update();
+            }
+
+            // Aguarda um momento para renderizar e então imprime
+            setTimeout(() => {
+                window.print();
+
+                // Restaura cores originais após impressão
+                setTimeout(() => {
+                    const screenLegendColor = '#B0BEC5';
+                    if (netWorthChart) {
+                        netWorthChart.options.plugins.legend.labels.color = screenLegendColor;
+                        netWorthChart.options.scales.x.ticks.color = screenLegendColor;
+                        netWorthChart.options.scales.y.ticks.color = screenLegendColor;
+                        netWorthChart.update();
+                    }
+                    if (cashFlowChart) {
+                        cashFlowChart.options.plugins.legend.labels.color = screenLegendColor;
+                        cashFlowChart.options.scales.x.ticks.color = screenLegendColor;
+                        cashFlowChart.options.scales.y.ticks.color = screenLegendColor;
+                        cashFlowChart.update();
+                    }
+                }, 500);
+            }, 100);
         }
     </script>
 </body>
