@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# AIOS (AI Operating System)
+.aios/
+.aios-core/
+.claude/
