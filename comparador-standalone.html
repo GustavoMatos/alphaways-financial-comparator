@@ -1704,8 +1704,12 @@
             const sampledFlows = result.flows.filter((f, i) => {
                 // Filtra pelo zoom
                 if (f.month < zoomStartMonth || f.month > zoomEndMonth) return false;
-                // Inclui: cada ano (12, 24, 36...), mês da contemplação, e último mês
-                return i % 12 === 0 || i === contemplationIdx || i === lastIdx;
+                // Inclui: mês 12, 24, 36... (anos completos), mês da contemplação, e último mês
+                const isYearEnd = f.month % 12 === 0;
+                const isContemplation = i === contemplationIdx;
+                const isLast = i === lastIdx;
+                const isFirst = f.month === Math.max(1, zoomStartMonth + 1);
+                return isYearEnd || isContemplation || isLast || isFirst;
             });
             // Remove duplicatas e ordena
             const uniqueFlows = [...new Map(sampledFlows.map(f => [f.month, f])).values()];
@@ -1725,6 +1729,13 @@
                 const years = month / 12;
                 return value / Math.pow(1 + annualInflation, years);
             };
+
+            // Debug: log valores da Compra à Vista
+            console.log('=== COMPRA À VISTA - Evolução ===');
+            uniqueFlows.forEach(f => {
+                const vp = toPresentValue(f.cashNetWorth, f.month);
+                console.log(`Mês ${f.month}: Nominal=${f.cashNetWorth.toFixed(0)}, VP=${vp.toFixed(0)}, Investimentos=${f.cashInvestments.toFixed(0)}`);
+            });
 
             // Net Worth Chart - Em Valor Presente
             if (netWorthChart) netWorthChart.destroy();
